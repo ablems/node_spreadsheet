@@ -143,40 +143,47 @@ function read(inputfile, callback, options) {
 
 this.read = read;
 
-function write(options, callback) {
+function write(inputfile, outputfile, callback) {
 	// add missing options from this.options
-	var this_options = that.options;
+	var args_str = '';
+	var args = [];
 
-	if (this_options) for (name in this_options) {
-		if (Object.hasOwnProperty.call(this_options, name)) {
-			if (!(name in options)) {
-				options[name] = this_options[name];
-			}
-		}
+	//options usage example
+	//if defined then use value:
+	//if('indent' in options)       args.push('--indent='+options['indent']);
+	//if defined then use boolean:
+	//if(('no-auto-dir' in options) && options['no-auto-dir'])    args.push('--no-auto-dir');
+
+	args.push('-f'); // add text
+	args.push(__dirname + '/convert.php'); // add text  
+	args.push(inputfile); // add text
+	args.push(outputfile); // add text
+
+	for (var i = 0; i < args.length; i++) {
+		args_str += " " + args[i].replace(/[^\\]'/g, function(m) {
+			return m.slice(0, 1) + '\\\'';
+		}) + "";
 	}
-	//
-
-	var args_str = '-f "' + addslashes(__dirname + '/convert.php') + '"';
 
 	var cmd = process.platform === 'win32' ? 'SET ' : 'export ';
-	cmd += 'LANG=en_US.UTF-8;php ' + args_str + "", exec_option;
 
+	cmd += 'LANG=en_US.UTF-8 && php ' + args_str, exec_option;
+
+	//var cmd='export 
 	lastcommand = cmd;
-
 	var child = exec(cmd, show_error);
-	child.stdin.write(JSON.stringify(options));
-	child.stdin.end();
-
+	
 	//var child = exec('export LANG=en_US.UTF-8;env ',  show_error );
 	child.on('exit', function(code, signal) {
 		if (callback) {
 			if (code == 0) {
-				callback(true);
+				callback(null, outputfile);
 			} 
 			else {
-				callback(false)
+				callback(code, undefined);
 			}
 		}
 	});
 }
+
 this.write = write;

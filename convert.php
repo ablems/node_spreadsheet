@@ -1,49 +1,67 @@
 <?php
 
-/*
-$json =file_get_contents('php://stdin');//rawurldecode($_SERVER['argv'][1]);
-$obj=json_decode($json,true);
-//echo '\r\ndebug1:\r\n';
-//echo "\r\n|".$json."|\r\n";
-//var_dump($obj);
-if(!$obj)
-{
-$obj=json_decode(stripslashes($json));
-//echo '\r\ndebug2:\r\n';
-//var_dump($obj);
-}
-*/
+	// php -f convert.php myfile.xlsx myfile.csv  
 
-// php -f convert.php myfile.xlsx myfile.csv  
+	if($_SERVER['argc'] < 3) {
+		echo "usage: php -f convert.php input.xlsx output.js\r\n supported formats: .xlsx or .xls or .ods or .csv ";
+		exit(2);
+	} 
 
-if($_SERVER['argc'] < 3) {
-	echo "usage: php -f convert.php input.xlsx output.js\r\n supported formats: .xlsx or .xls or .ods or .csv ";
-	exit(2);
-} 
 	error_reporting(E_ALL);
 
 	date_default_timezone_set('GMT');
 	ini_set("auto_detect_line_endings", true);
 	ini_set("memory_limit", '512M');
-	/** PHPExcel_IOFactory */
+
 	require_once 'phpexcel/Classes/PHPExcel/IOFactory.php';
 	require_once 'phpexcel/Classes/PHPExcel/Writer/JSON.php';
 
+	$incoming = $_SERVER['argv'][1];
+	$outgoing = $_SERVER['argv'][2];
+	
+	$outgoingExtention = strtolower(pathinfo($outgoing, PATHINFO_EXTENSION));
 
-	if (!file_exists($_SERVER['argv'][1])) {
-		exit($_SERVER['argv'][1] . " not found.\n");
+	if (!file_exists($incoming)) {
+		exit($incoming . " not found.\n");
 	}
 
-//  echo date('H:i:s') . " Loading file\n";
-	$objPHPExcel = PHPExcel_IOFactory::load($_SERVER['argv'][1]);
-//  echo date('H:i:s') . " Done\n";
+	$objPHPExcel = PHPExcel_IOFactory::load($incoming);
 
-	//$objCSV = new PHPExcel_Writer_CSV($objPHPExcel); 
-	$objCSV = new PHPExcel_Writer_JSON($objPHPExcel);
-	$objCSV->setUseBOM(false);
+	switch($outgoingExtention) {
+		case "js":
+		case "json":
+			$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'JSON');
+			$objWriter->setUseBOM(false);
+		break;
+	
+		case "csv":
+			$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'CSV');
+			$objWriter->setUseBOM(false);
+		break;
+	
+		case "xlsx":
+			$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+		break;
+	
+		case "xls":
+			$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel5');
+		break;
+	
+		case "html":
+			$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'HTML');
+		break;
+	
+		case "pdf":
+			$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'PDF');
+		break;
+	
+		default:
+			exit("$outgoing is an unsupported file type\n");
+		break;
+	}
+
+
 //	echo date('H:i:s') . " Saveing file\n";
-	$objCSV->save($_SERVER['argv'][2]);
-	//$objCSV->save('/tmp/json42');
-//	echo date('H:i:s') . " Done\n";
-// if input is csv then convert charset : iso-8859-8 -> utf-8
+
+	$objWriter->save($outgoing);
 ?>
