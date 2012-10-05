@@ -246,7 +246,7 @@ class PHPExcel_Reader_CSV implements PHPExcel_Reader_IReader
 					}
 
 					// Set cell value
-					$objPHPExcel->getActiveSheet()->getCell($columnLetter . $currentRow)->setValue($rowData[$i]);
+					$objPHPExcel->getActiveSheet()->getCell($columnLetter . $currentRow)->setValueExplicit($rowData[$i], PHPExcel_Cell_DataType::TYPE_STRING);
 				}
 			}
 		}
