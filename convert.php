@@ -14,18 +14,17 @@ $obj=json_decode(stripslashes($json));
 }
 */
 
-// php -f convert.php myfile.xlsx myfile.csv
+// php -f convert.php myfile.xlsx myfile.csv  
 
 if($_SERVER['argc'] < 3) {
 	echo "usage: php -f convert.php input.xlsx output.js\r\n supported formats: .xlsx or .xls or .ods or .csv ";
 	exit(2);
-}
+} 
 	error_reporting(E_ALL);
 
-	date_default_timezone_set('Asia/Jerusalem'); // 
-	
-	ini_set("auto_detect_line_endings", true); // https://github.com/shimondoodkin/node_spreadsheet/issues/2
-	
+	date_default_timezone_set('GMT');
+	ini_set("auto_detect_line_endings", true);
+	ini_set("memory_limit", '512M');
 	/** PHPExcel_IOFactory */
 	require_once 'phpexcel/Classes/PHPExcel/IOFactory.php';
 	require_once 'phpexcel/Classes/PHPExcel/Writer/JSON.php';
@@ -39,7 +38,7 @@ if($_SERVER['argc'] < 3) {
 	$objPHPExcel = PHPExcel_IOFactory::load($_SERVER['argv'][1]);
 //  echo date('H:i:s') . " Done\n";
 
-	//$objCSV = new PHPExcel_Writer_CSV($objPHPExcel);
+	//$objCSV = new PHPExcel_Writer_CSV($objPHPExcel); 
 	$objCSV = new PHPExcel_Writer_JSON($objPHPExcel);
 	$objCSV->setUseBOM(false);
 //	echo date('H:i:s') . " Saveing file\n";
