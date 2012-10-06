@@ -1,5 +1,5 @@
-# Thanks to Shimon Doodkin for writing the original version of this module
-# Original repo can be found at: https://github.com/shimondoodkin/node_spreadsheet
+Thanks to Shimon Doodkin for writing the original version of this module
+Original repo can be found at: https://github.com/shimondoodkin/node_spreadsheet
 
 #What Is This?
 Node spreadsheet is a module to read and write Excel and CSV files using PHPExcel from phpexcel.codeplex.com.
