@@ -1,4 +1,5 @@
 Thanks to Shimon Doodkin for writing the original version of this module
+
 Original repo can be found at: https://github.com/shimondoodkin/node_spreadsheet
 
 #What Is This?
@@ -12,6 +13,7 @@ As this runs PHPExcel, you will need php5-cli installed. You'll also need Node.j
 
 #Usage
 To read in an excel file:
+
 	var spreadsheet=require('node_spreadsheet');
     var basePath = __dirname;
 	var inputFile = basePath + "YourFile.xls";
@@ -21,6 +23,7 @@ To read in an excel file:
 	});
 
 To read in an excel file and convert it to an object:
+
 	var spreadsheet=require('node_spreadsheet');
     var basePath = __dirname;
 	var inputFile = basePath + "YourFile.xls";
@@ -54,6 +57,7 @@ To read in an excel file and convert it to an object:
 	});
 
 To write an excel file:
+
 	var spreadsheet=require('node_spreadsheet');
 	var basePath = __dirname;
 	var outFile = basePath + "YourFile.xls";
@@ -69,6 +73,7 @@ To write an excel file:
 	});
 
 To convert an excel file:
+
 	var spreadsheet=require('node_spreadsheet');
 	var basePath = __dirname;
 
