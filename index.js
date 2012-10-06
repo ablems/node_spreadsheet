@@ -107,7 +107,7 @@ exports.readAndConvertToObject = function readAndConvertToObject(inputfile, call
 		callback(data);
 	};
 
-	this.read(inputfile, processData, options);
+	exports.read(inputfile, processData);
 };
 
 exports.write = function write(inputData, outputfile, callback) {
@@ -117,7 +117,7 @@ exports.write = function write(inputData, outputfile, callback) {
 	
 	if(inputData instanceof Array) {
 		if(inputData[0] instanceof Array) {
-			rinputData.forEach(function(val) {
+			inputData.forEach(function(val) {
 				str += val.join(',') + '\r\n';
 			});
 			
@@ -126,19 +126,22 @@ exports.write = function write(inputData, outputfile, callback) {
 		else {
 			inputData.join('\r\n');
 		}
+	
+		fs.writeFile(file, str, function(err) {
+			if(err) {
+				callback(err);
+			}
+			else {
+				exports.convert(file, outputfile, function(err, fn) {
+					fs.unlink(file);
+					callback(err, fn);
+				});
+			}
+		});
 	}
 	else {
 		callback(new Error('Invalid inputData'));
 	}
-	
-	fs.writeFile(file, str, function(err) {
-		if(err) {
-			callback(err);
-		}
-		else {
-			exports.convert(file, outputfile, callback);
-		}
-	});
 };
 
 exports.convert = function convert(inputfile, outputfile, callback) {
