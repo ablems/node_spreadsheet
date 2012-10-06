@@ -1,29 +1,5 @@
-var fs = require('fs'), path = require('path');
+var fs = require('fs');
 var exec = require('child_process').exec;
-
-var that = this;
-
-that.tempdir = process.platform === 'win32' ? process.env.TEMP + '\\' : '/tmp/';
-
-var lastcommand, lastrandom = [], lastrandom_time = 0;
-
-function uniquerandom() {
-	var newtime = (new Date()).getTime(), random;
-	
-	if (lastrandom_time != newtime && lastrandom.length > 0) {
-		lastrandom = [];
-	}
-	
-	do {
-		random = Math.floor(Math.random() * 9999);
-	} while (lastrandom.indexOf(random) != -1);
-	
-	lastrandom.push(random);
-	
-	return (newtime * 10000) + random;
-}
-
-this.uniquerandom = uniquerandom;
 
 var isoDateReviver_re = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)(?:([\+-])(\d{2})\:(\d{2}))?Z?$/;
 
@@ -51,62 +27,17 @@ var exec_option = {
 	timeout: 1500
 };
 
-function tocolnames(list, colnamesarr, eachcall) {
-	var retlist = [];
-	var cols_len = colnamesarr.length
-
-	for (var i = 0, l = list.length; i < l; i++) {
-		var obj = {};
-		for (var j = 0, items_len = list[i].length; j < cols_len && j < items_len; j++) {
-			obj[colnamesarr[j]] = list[i][j];
-		}
-		if (eachcall) eachcall(obj);
-		retlist[i] = obj;
-	}
-	return retlist;
-}
-
-function readcols(inputfile, colnamesarr, callback, options) {
-	read(inputfile, function(list) {
-
-		var listofobjs = tocolnames(list, colnamesarr);
-		delete list;
-		callback(listofobjs);
-
-	}, options);
-};
-
-this.readcols = readcols;
-
-function readcols_each(inputfile, colnamesarr, eachcall, callback, options) {
-	read(inputfile, function(list) {
-
-		var listofobjs = tocolnames(list, colnamesarr, eachcall);
-		delete list;
-		callback(listofobjs);
-
-	}, options);
-};
-
-this.readcols_each = readcols_each;
-
-function read(inputfile, callback, options) {
-	if (!options) options = {};
-	var file = ('file' in options) ? that.tempdir + options['file'] : that.tempdir + that.uniquerandom() + '.json';
+exports.read = function read(inputfile, callback) {
+	var tempdir = process.platform === 'win32' ? process.env.TEMP + '\\' : '/tmp/';
+	var file = tempdir + Date.now() + '.json';
 
 	var args_str = '';
 	var args = [];
 
-	//options usage example
-	//if defined then use value:
-	//if('indent' in options)       args.push('--indent='+options['indent']);
-	//if defined then use boolean:
-	//if(('no-auto-dir' in options) && options['no-auto-dir'])    args.push('--no-auto-dir');
-
-	args.push('-f'); // add text
-	args.push(__dirname + '/convert.php'); // add text  
-	args.push(inputfile); // add text
-	args.push(file); // save to file only
+	args.push('-f');
+	args.push(__dirname + '/convert.php');
+	args.push(inputfile);
+	args.push(file);
 
 	for (var i = 0; i < args.length; i++) {
 		args_str += " " + args[i].replace(/[^\\]'/g, function(m) {
@@ -118,7 +49,6 @@ function read(inputfile, callback, options) {
 
 	cmd += 'LANG=en_US.UTF-8 && php ' + args_str, exec_option;
 
-	//var cmd='export 
 	lastcommand = cmd;
 	var child = exec(cmd, show_error);
 
@@ -126,33 +56,94 @@ function read(inputfile, callback, options) {
 	child.on('exit', function(code, signal) {
 		if (code == 0) {
 			fs.readFile(file, 'utf-8', function(err, data) {
-				if (err) throw err;
-				fs.unlink(file, function(err2) {
-					if (err2) throw err;
-					callback(JSON.parse(data, isoDateReviver));
-				});
+				if (err) {
+					callback(err);
+				}
+				else {
+					fs.unlink(file, function(err2) {
+						if (err2) {
+							callback(err2);
+						}
+						else {
+							callback(null, JSON.parse(data, isoDateReviver));
+						}
+					});
+				}
 			});
 		} 
 		else {
-			callback([
-				["FILE NOT FOUND"]
-			]);
+			callback(new Error("inputfile not found"));
 		}
 	});
-}
+};
 
-this.read = read;
+exports.readAndConvertToObject = function readAndConvertToObject(inputfile, callback) {
+	var processData = function(data) {
+		var headerRow = data.shift();
+		var formattedData = [];
+		
+		// replace blank header fields with actual column names to create valid objects later.
+		headerRow.forEach(function(val, index) {
+			if (!val && val !== 0) {
+				headerRow[index] = 'untitled_' + index;
+			};
+			headerRow[index] = APP.formatters.trim(headerRow[index]).replace(/ /g, '_').toLowerCase();
+		});
+		
+		data.forEach(function(row) {
+			var blankRow = true;
+			var formattedRow = {};
+			row.forEach(function(cellValue, index) {
+				if (cellValue) {
+					blankRow = false;
+				};
+				formattedRow[headerRow[index]] = (cellValue && typeof cellValue == 'string') ? APP.formatters.trim(cellValue) : cellValue;
+			});
+			
+			var pushVal = blankRow ? '' : formattedRow;
+			formattedData.push(pushVal);
+		});
+		
+		callback(data);
+	};
 
-function write(inputfile, outputfile, callback) {
-	// add missing options from this.options
+	this.read(inputfile, processData, options);
+};
+
+exports.write = function write(inputData, outputfile, callback) {
+	var str = '';
+	var tempdir = process.platform === 'win32' ? process.env.TEMP + '\\' : '/tmp/';
+	var file = tempdir + Date.now() + '.csv';
+	
+	if(inputData instanceof Array) {
+		if(inputData[0] instanceof Array) {
+			rinputData.forEach(function(val) {
+				str += val.join(',') + '\r\n';
+			});
+			
+			inputData = str;
+		}
+		else {
+			inputData.join('\r\n');
+		}
+	}
+	else {
+		callback(new Error('Invalid inputData'));
+	}
+	
+	fs.writeFile(file, str, function(err) {
+		if(err) {
+			callback(err);
+		}
+		else {
+			exports.convert(file, outputfile, callback);
+		}
+	});
+};
+
+exports.convert = function convert(inputfile, outputfile, callback) {
 	var args_str = '';
 	var args = [];
-
-	//options usage example
-	//if defined then use value:
-	//if('indent' in options)       args.push('--indent='+options['indent']);
-	//if defined then use boolean:
-	//if(('no-auto-dir' in options) && options['no-auto-dir'])    args.push('--no-auto-dir');
 
 	args.push('-f'); // add text
 	args.push(__dirname + '/convert.php'); // add text  
@@ -184,6 +175,4 @@ function write(inputfile, outputfile, callback) {
 			}
 		}
 	});
-}
-
-this.write = write;
+};

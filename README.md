@@ -1,23 +1,80 @@
-#node spreadsheet
-this is a solution to read excel files in node js
-based on PHPExcel from phpexcel.codeplex.com
-php based is better then nothing
+# Thanks to Shimon Doodkin for writing the original version of this module
+# Original repo can be found at: https://github.com/shimondoodkin/node_spreadsheet
 
-#example
-    var spreadsheet=require('node_spreadsheet')
-    spreadsheet.read(__dirname+"/Book1.xls",function(obj){console.log(obj);});
-output:
-    [ [ 'phonecol', 'ansicol', 'utfcol', 'numcol', 'datecol' ]
-    , [ '0547412345'
-      , 'asfasd'
-      , '\u05d2\u05d3\u05db\u05e9\u05d3\u05d2\u05e9\u05d3\u05d2'
-      , 12312
-      , Sun, 10 Oct 2010 10:55:00 GMT
-      ]
-    ]
+#What Is This?
+Node spreadsheet is a module to read and write Excel and CSV files using PHPExcel from phpexcel.codeplex.com.
 
-#requirements:
-this piece of software is based on php5-cli so you need to install it first.
-like :
+#Installation
+npm install node_spreadsheet
 
-sudo aptitude install php5-cli
+#Requirements
+As this runs PHPExcel, you will need php5-cli installed. You'll also need Node.js
+
+#Usage
+To read in an excel file:
+	var spreadsheet=require('node_spreadsheet');
+    var basePath = __dirname;
+	var inputFile = basePath + "YourFile.xls";
+	
+	spreadsheet.read(inputFile, function(err, data) {
+		if(!err) console.log(data);
+	});
+
+To read in an excel file and convert it to an object:
+	var spreadsheet=require('node_spreadsheet');
+    var basePath = __dirname;
+	var inputFile = basePath + "YourFile.xls";
+	
+	spreadsheet.readAndConvertToObject(inputFile, function(err, data) {
+		/*
+		  A CSV containing the following data:
+			'Address', 'City', 'State', 'Zip'
+			'1515 S Main St', 'Los Angeles', 'CA', '90021'
+			'124 N Penrose Ave', 'Someplace', 'CA', '92022'
+			
+		  Will become:
+		  
+		  [
+			{
+				address: '1515 S Main St',
+				city: 'Los Angeles',
+				state: 'CA',
+				zip: '90021'
+			},
+			{
+				address: '124 N Penrose Ave',
+				city: 'Someplace',
+				state: 'CA',
+				zip: '92022'
+			}
+		  ]
+		*/
+		 
+		if(!err) console.log(data);
+	});
+
+To write an excel file:
+	var spreadsheet=require('node_spreadsheet');
+	var basePath = __dirname;
+	var outFile = basePath + "YourFile.xls";
+	
+	var data = [
+		['Address', 'City', 'State', 'Zip'],
+		['1515 S Main St', 'Los Angeles', 'CA', '90021'],
+		['124 N Penrose Ave', 'Someplace', 'CA', '92022']
+	];
+	
+	spreadsheet.write(data, outFile,function(err, fileName) {
+		if(!err) console.log(fileName);
+	});
+
+To convert an excel file:
+	var spreadsheet=require('node_spreadsheet');
+	var basePath = __dirname;
+
+	var inFile = basePath + "YourFile.csv";
+	var outFile = basePath + "YourFile.xlsx";
+
+	spreadsheet.convert(inFile, outFile,function(err, fileName) {
+		if(!err) console.log(fileName);
+	});
