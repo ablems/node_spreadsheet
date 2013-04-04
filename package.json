@@ -1,0 +1,27 @@
+{
+  "name": "node_spreadsheet",
+  "version": "1.0.0",
+  "description": "Node spreadsheet is a module to read and write Excel and CSV files using PHPExcel from phpexcel.codeplex.com.",
+  "author": { "name":  "Jesse Pate", "email": "jesse@nuorder.com" },
+  "contributors": [
+    { "name":  "Jesse Pate", "email": "jesse@nuorder.com" },
+	{ "name":  "Shimon Doodkin", "email": "helpmepro1@gmail.com" }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/jessedpate/node_spreadsheet.git"
+  },
+  "keywords": [
+    "PHPExcel",
+	"excel",
+    "CSV",
+    "spreadsheet"
+  ],
+  "dependencies": {
+  },
+  "main": "index.js",
+  "engines": {
+    "node": ">= 0.6.6"
+  }
+}
+
