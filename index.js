@@ -59,18 +59,24 @@ exports.read = function read(inputfile, callback) {
 		if (code === 0) {
 			fs.readFile(file, 'utf-8', function(err, data) {
 				if (err) {
-					callback(err);
+					return callback(err);
 				}
-				else {
-					fs.unlink(file, function(err2) {
-						if (err2) {
-							callback(err2);
-						}
-						else {
-							callback(null, JSON.parse(data, isoDateReviver));
-						}
-					});
-				}
+
+				data = data.replace('\t', '');
+
+				fs.unlink(file, function(err2) {
+					if (err2) {
+						return callback(err2);
+					}
+
+					var parsedErr, parsed;
+					try {
+						parsed = JSON.parse(data, isoDateReviver);
+					} catch(err) {
+						parsedErr = err;
+					}
+					callback(parsedErr, JSON.parse(data, isoDateReviver));
+				});
 			});
 		} 
 		else {
