@@ -27,6 +27,10 @@ var exec_option = {
 	timeout: 1500
 };
 
+function replacer(m) {
+	return m.slice(0, 1) + '\\\'';
+}
+
 exports.read = function read(inputfile, callback) {
 	var tempdir = process.platform === 'win32' ? process.env.TEMP + '\\' : '/tmp/';
 	var file = tempdir + Date.now() + '.json';
@@ -40,21 +44,19 @@ exports.read = function read(inputfile, callback) {
 	args.push(file);
 
 	for (var i = 0; i < args.length; i++) {
-		args_str += " " + args[i].replace(/[^\\]'/g, function(m) {
-			return m.slice(0, 1) + '\\\'';
-		}) + "";
+		args_str += " " + args[i].replace(/[^\\]'/g, replacer) + "";
 	}
 
 	var cmd = process.platform === 'win32' ? 'SET ' : 'export ';
 
-	cmd += 'LANG=en_US.UTF-8 && php ' + args_str, exec_option;
+	cmd += 'LANG=en_US.UTF-8 && php ' + args_str;
 
 	lastcommand = cmd;
 	var child = exec(cmd, show_error);
 
 	//var child = exec('export LANG=en_US.UTF-8;env ',  show_error );
 	child.on('exit', function(code, signal) {
-		if (code == 0) {
+		if (code === 0) {
 			fs.readFile(file, 'utf-8', function(err, data) {
 				if (err) {
 					callback(err);
@@ -86,7 +88,7 @@ exports.readAndConvertToObject = function readAndConvertToObject(inputfile, call
 		headerRow.forEach(function(val, index) {
 			if (!val && val !== 0) {
 				headerRow[index] = 'untitled_' + index;
-			};
+			}
 			headerRow[index] = APP.formatters.trim(headerRow[index]).replace(/ /g, '_').toLowerCase();
 		});
 		
@@ -96,7 +98,7 @@ exports.readAndConvertToObject = function readAndConvertToObject(inputfile, call
 			row.forEach(function(cellValue, index) {
 				if (cellValue) {
 					blankRow = false;
-				};
+				}
 				formattedRow[headerRow[index]] = (cellValue && typeof cellValue == 'string') ? APP.formatters.trim(cellValue) : cellValue;
 			});
 			
@@ -154,14 +156,12 @@ exports.convert = function convert(inputfile, outputfile, callback) {
 	args.push(outputfile); // add text
 
 	for (var i = 0; i < args.length; i++) {
-		args_str += " " + args[i].replace(/[^\\]'/g, function(m) {
-			return m.slice(0, 1) + '\\\'';
-		}) + "";
+		args_str += " " + args[i].replace(/[^\\]'/g, replacer) + "";
 	}
 
 	var cmd = process.platform === 'win32' ? 'SET ' : 'export ';
 
-	cmd += 'LANG=en_US.UTF-8 && php ' + args_str, exec_option;
+	cmd += 'LANG=en_US.UTF-8 && php ' + args_str;
 
 	//var cmd='export 
 	lastcommand = cmd;
@@ -170,7 +170,7 @@ exports.convert = function convert(inputfile, outputfile, callback) {
 	//var child = exec('export LANG=en_US.UTF-8;env ',  show_error );
 	child.on('exit', function(code, signal) {
 		if (callback) {
-			if (code == 0) {
+			if (code === 0) {
 				callback(null, outputfile);
 			} 
 			else {
