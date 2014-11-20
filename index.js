@@ -62,8 +62,8 @@ exports.read = function read(inputfile, callback) {
 					return callback(err);
 				}
 
-				data = data.replace('\t', '');
-				data = data.replace('\n', '');
+				data = data.replace(/\t/g, '');
+				data = data.replace(/\n/g, '');
 
 				fs.unlink(file, function(err2) {
 					if (err2) {
